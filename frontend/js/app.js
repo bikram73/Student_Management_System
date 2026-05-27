@@ -59,7 +59,7 @@ let currentPage = 1;
 let totalPages = 1;
 let activityLog = [];
 
-const apiBase = () => localStorage.getItem("apiBase") || "http://localhost:5000/api";
+const apiBase = () => window.API_BASE || localStorage.getItem("apiBase") || "http://localhost:5000/api";
 
 const pageSize = () => {
   const value = parseInt(localStorage.getItem("pageSize") || "10", 10);

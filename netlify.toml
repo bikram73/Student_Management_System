@@ -1,4 +1,5 @@
 [build]
+  command = "API_BASE=${API_BASE:-http://localhost:5000/api}; printf \"window.API_BASE='%s';\\n\" \"$API_BASE\" > frontend/js/config.js"
   publish = "frontend"
 
 [[redirects]]

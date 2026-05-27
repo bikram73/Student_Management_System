@@ -1,7 +1,7 @@
 const form = document.getElementById("login-form");
 const error = document.getElementById("login-error");
 
-const apiBase = localStorage.getItem("apiBase") || "http://localhost:5000/api";
+const apiBase = window.API_BASE || localStorage.getItem("apiBase") || "http://localhost:5000/api";
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
