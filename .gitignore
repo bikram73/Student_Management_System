@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+*.egg
+.venv/
+venv/
+.env/
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Logs
+*.log
+
+# Local data and settings
+backend/database/students.json
+backend/database/students.db
+backend/settings.json
+
+data/
+database/

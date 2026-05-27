@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Management System - Login</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Space+Grotesk:wght@500;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="theme">
+    <main class="auth">
+      <section class="auth-card">
+        <div class="brand">
+          <div class="brand-dot"></div>
+          <div>
+            <p class="brand-title">Student Management</p>
+            <p class="brand-subtitle">Admin Portal</p>
+          </div>
+        </div>
+        <h1>Welcome back</h1>
+        <p class="muted">Login to manage students, attendance, and reports.</p>
+        <form id="login-form">
+          <label class="field">
+            Username
+            <input type="text" name="username" placeholder="admin" required />
+          </label>
+          <label class="field">
+            Password
+            <input type="password" name="password" placeholder="admin123" required />
+          </label>
+          <button type="submit" class="btn primary">Login</button>
+          <p id="login-error" class="error"></p>
+        </form>
+        <p class="muted small">Default credentials are stored in the backend settings.</p>
+      </section>
+      <div class="auth-visual">
+        <div class="card-glow"></div>
+        <div class="auth-visual-card">
+          <h2>Track. Analyze. Improve.</h2>
+          <p>Keep student records organized with smart dashboards.</p>
+        </div>
+      </div>
+    </main>
+    <script src="js/login.js"></script>
+  </body>
+</html>
