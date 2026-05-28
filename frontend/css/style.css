@@ -614,3 +614,72 @@ a {
     font-size: 13px;
   }
 }
+
+/* Responsive improvements: off-canvas sidebar, tighter tables, modal tweaks */
+@media (max-width: 960px) {
+  .layout {
+    position: relative;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: -280px;
+    height: 100vh;
+    width: 260px;
+    z-index: 60;
+    transition: left 240ms ease;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    box-shadow: 0 8px 30px rgba(2,6,23,0.35);
+  }
+
+  body.sidebar-open .sidebar {
+    left: 0;
+  }
+
+  .hamburger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 10px;
+    font-size: 18px;
+    margin-right: 8px;
+  }
+
+  .content {
+    padding: 20px 18px 64px;
+  }
+
+  .table-wrap {
+    padding: 12px;
+  }
+
+  .report-output, .table-wrap table, .report-table {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 600px) {
+  .topbar input { min-width: 120px; }
+  .table-wrap th, .table-wrap td, .report-table th, .report-table td {
+    padding: 8px 6px;
+    font-size: 13px;
+  }
+
+  .modal-card {
+    width: 95%;
+    padding: 12px;
+  }
+
+  #student-form > label.field {
+    min-width: 100%;
+    flex-basis: 100%;
+  }
+
+  .calendar-weekdays, .calendar-grid {
+    gap: 6px;
+  }
+
+  .report-output { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+}

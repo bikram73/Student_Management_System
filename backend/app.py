@@ -275,11 +275,18 @@ def health() -> Any:
 def login() -> Any:
     payload = request.get_json(silent=True) or {}
     settings = load_settings()
-    if (
-        payload.get("username") == settings.get("admin_username")
-        and payload.get("password") == settings.get("admin_password")
-    ):
+    # Normalize values before comparing to avoid failures due to whitespace or None
+    provided_user = str(payload.get("username", "")).strip()
+    provided_pass = str(payload.get("password", "")).strip()
+    expected_user = str(settings.get("admin_username", "")).strip()
+    expected_pass = str(settings.get("admin_password", "")).strip()
+
+    # Log attempted username for debugging (do not log passwords)
+    app.logger.debug("Login attempt for user: %s", provided_user)
+
+    if provided_user and provided_pass and provided_user == expected_user and provided_pass == expected_pass:
         return jsonify({"success": True})
+
     return jsonify({"success": False}), 401
 
 

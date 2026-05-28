@@ -832,6 +832,24 @@ menuButtons.forEach((btn) => {
   });
 });
 
+// Responsive helpers: sidebar toggle for small screens
+const initResponsive = () => {
+  const sidebarToggle = document.getElementById("sidebar-toggle");
+  if (sidebarToggle) {
+    sidebarToggle.addEventListener("click", (e) => {
+      e.stopPropagation();
+      document.body.classList.toggle("sidebar-open");
+    });
+  }
+
+  document.addEventListener("click", (e) => {
+    if (!document.body.classList.contains("sidebar-open")) return;
+    if (!e.target.closest(".sidebar") && !e.target.closest("#sidebar-toggle")) {
+      document.body.classList.remove("sidebar-open");
+    }
+  });
+};
+
 const init = () => {
   if (apiStatus) apiStatus.textContent = "Unknown";
   pageSizeInput.value = pageSize();
@@ -839,6 +857,7 @@ const init = () => {
   fetchStats();
   fetchStudents();
   fetchAllStudentsForAttendance();
+  initResponsive();
 };
 
 init();
