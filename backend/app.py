@@ -407,6 +407,31 @@ def lock_today_attendance(student_id: int) -> Any:
     return jsonify({"data": serialize_student(record)})
 
 
+@app.post("/api/attendance/today/lock-all")
+def lock_today_attendance_all() -> Any:
+    students = load_students()
+    key = today_key()
+    locked_count = 0
+
+    for record in students:
+        daily = get_daily_attendance(record)
+        entry = daily.get(key)
+        if not isinstance(entry, dict):
+            continue
+        if entry.get("status") not in {"present", "absent"}:
+            continue
+        if entry.get("locked"):
+            continue
+        entry["locked"] = True
+        recompute_attendance(record)
+        locked_count += 1
+
+    if locked_count > 0:
+        save_students(students)
+
+    return jsonify({"locked_count": locked_count})
+
+
 @app.get("/api/reports/top")
 def report_top() -> Any:
     min_marks = int(request.args.get("min_marks", 85))

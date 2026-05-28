@@ -39,6 +39,7 @@ const attendanceCalendar = document.getElementById("attendance-calendar");
 const calendarMonth = document.getElementById("calendar-month");
 const calendarWeekdays = document.getElementById("calendar-weekdays");
 const attendanceTable = document.getElementById("attendance-table");
+const saveAttendanceAll = document.getElementById("save-attendance-all");
 
 const reportOutput = document.getElementById("report-output");
 const reportTop = document.getElementById("report-top");
@@ -166,20 +167,27 @@ const renderAttendanceStudents = (students) => {
   attendanceTable.innerHTML = "";
   if (!students.length) {
     const row = document.createElement("tr");
-    row.innerHTML = '<td colspan="4" class="muted">No students found.</td>';
+    row.innerHTML = '<td colspan="5" class="muted">No students found.</td>';
     attendanceTable.appendChild(row);
     return;
   }
 
   students.forEach((student) => {
+    const status = student.today_status || "Not Marked";
+    const isLocked = Boolean(student.today_locked);
+
     const row = document.createElement("tr");
     row.innerHTML = `
       <td>${student.student_id}</td>
       <td>${student.name}</td>
       <td>${student.attendance}%</td>
+      <td><span class="attendance-status ${isLocked ? "locked" : ""}">${isLocked ? `${status} (Saved)` : status}</span></td>
       <td class="actions">
-        <button class="btn success" data-attendance-id="${student.id}" data-present="true">Mark Present</button>
-        <button class="btn danger" data-attendance-id="${student.id}" data-present="false">Mark Absent</button>
+        <div class="attendance-row-actions">
+          <button class="btn success" data-attendance-id="${student.id}" data-action="present" ${isLocked ? "disabled" : ""}>Mark Present</button>
+          <button class="btn danger" data-attendance-id="${student.id}" data-action="absent" ${isLocked ? "disabled" : ""}>Mark Absent</button>
+          <button class="btn ghost" data-attendance-id="${student.id}" data-action="reverse" ${isLocked ? "disabled" : ""}>Reverse</button>
+        </div>
       </td>
     `;
     attendanceTable.appendChild(row);
@@ -259,17 +267,29 @@ const deleteStudent = async (id) => {
   return result.data;
 };
 
-const updateAttendance = async (id, present) => {
-  const response = await fetch(`${apiBase()}/attendance/${id}`, {
+const updateTodayAttendance = async (id, status) => {
+  const response = await fetch(`${apiBase()}/attendance/${id}/today`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ present }),
+    body: JSON.stringify({ status }),
   });
   const result = await response.json();
   if (!response.ok) {
-    throw new Error(result.error || "Failed to update attendance.");
+    throw new Error(result.error || "Failed to update today's attendance.");
   }
   return result.data;
+};
+
+const lockTodayAttendanceForAll = async () => {
+  const response = await fetch(`${apiBase()}/attendance/today/lock-all`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  });
+  const result = await response.json();
+  if (!response.ok) {
+    throw new Error(result.error || "Failed to save today's attendance for all students.");
+  }
+  return result;
 };
 
 studentForm.addEventListener("submit", async (event) => {
@@ -351,23 +371,39 @@ nextPage.addEventListener("click", () => {
 });
 
 attendanceTable.addEventListener("click", async (event) => {
-  const button = event.target.closest("button[data-attendance-id]");
+  const button = event.target.closest("button[data-attendance-id][data-action]");
   if (!button) {
     return;
   }
 
   const id = parseInt(button.dataset.attendanceId, 10);
-  const isPresent = button.dataset.present === "true";
+  const action = button.dataset.action;
 
   if (!id) {
     return;
   }
 
-  await updateAttendance(id, isPresent);
-  logActivity(`Marked ${isPresent ? "present" : "absent"} for ID ${id}`);
-  await fetchStats();
-  await fetchStudents();
-  await fetchAllStudentsForAttendance();
+  try {
+    if (action === "present") {
+      await updateTodayAttendance(id, "present");
+      logActivity(`Marked present for ID ${id}`);
+    } else if (action === "absent") {
+      await updateTodayAttendance(id, "absent");
+      logActivity(`Marked absent for ID ${id}`);
+    } else if (action === "reverse") {
+      await updateTodayAttendance(id, "clear");
+      logActivity(`Reversed today's attendance for ID ${id}`);
+    } else if (action === "save") {
+      await lockTodayAttendance(id);
+      logActivity(`Saved today's attendance permanently for ID ${id}`);
+    }
+
+    await fetchStats();
+    await fetchStudents();
+    await fetchAllStudentsForAttendance();
+  } catch (err) {
+    alert(err.message || "Attendance action failed.");
+  }
 });
 
 reportTop.addEventListener("click", async () => {

@@ -391,6 +391,11 @@ a {
   margin-top: 0;
 }
 
+.attendance-footer-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .attendance-row-actions {
   display: flex;
   flex-wrap: wrap;
