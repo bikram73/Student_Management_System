@@ -120,6 +120,30 @@ a {
   font-size: 14px;
 }
 
+.field-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.small-btn {
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+.test-marks-list {
+  display: grid;
+  gap: 10px;
+}
+
+.inline-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+}
+
 .field input,
 .field select {
   padding: 10px 12px;

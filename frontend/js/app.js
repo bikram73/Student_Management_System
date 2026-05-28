@@ -33,6 +33,8 @@ const studentDepartment = document.getElementById("student-department");
 const studentMarks = document.getElementById("student-marks");
 const studentAttendance = document.getElementById("student-attendance");
 const studentContact = document.getElementById("student-contact");
+const addTestMark = document.getElementById("add-test-mark");
+const testMarksList = document.getElementById("test-marks-list");
 
 const activityList = document.getElementById("activity-list");
 const attendanceCalendar = document.getElementById("attendance-calendar");
@@ -197,6 +199,11 @@ const renderAttendanceStudents = (students) => {
 const renderStudents = (students) => {
   studentsTable.innerHTML = "";
   students.forEach((student) => {
+    const scores = Array.isArray(student.test_scores) ? student.test_scores : [];
+    const test1 = scores.length > 0 ? scores[0] : "-";
+    const test2 = scores.length > 1 ? scores[1] : "-";
+    const total = scores.length > 0 ? scores.reduce((sum, value) => sum + Number(value || 0), 0).toFixed(2) : "0";
+
     const row = document.createElement("tr");
     row.innerHTML = `
       <td>${student.id}</td>
@@ -204,7 +211,9 @@ const renderStudents = (students) => {
       <td>${student.name}</td>
       <td>${student.course}</td>
       <td>${student.department}</td>
-      <td>${student.marks}</td>
+      <td>${test1}</td>
+      <td>${test2}</td>
+      <td>${total}</td>
       <td>${student.attendance}</td>
       <td class="actions">
         <button class="btn ghost" data-action="edit" data-id="${student.id}">Edit</button>
@@ -220,11 +229,48 @@ const openModal = (title) => {
   modal.classList.remove("hidden");
 };
 
+const createTestMarkField = (value = "") => {
+  const wrapper = document.createElement("label");
+  wrapper.className = "inline-field";
+
+  const count = testMarksList.querySelectorAll(".test-mark-input").length + 1;
+  wrapper.innerHTML = `
+    Test Mark ${count}
+    <input type="number" class="test-mark-input" min="0" max="100" placeholder="0" value="${value}" />
+  `;
+
+  return wrapper;
+};
+
+const resetTestMarks = () => {
+  if (!testMarksList) {
+    return;
+  }
+  testMarksList.innerHTML = "";
+  testMarksList.appendChild(createTestMarkField());
+};
+
+const getTestMarksValue = () => {
+  if (!testMarksList) {
+    return [];
+  }
+  return Array.from(testMarksList.querySelectorAll(".test-mark-input"))
+    .map((input) => input.value.trim())
+    .filter((value) => value !== "");
+};
+
+if (addTestMark && testMarksList) {
+  addTestMark.addEventListener("click", () => {
+    testMarksList.appendChild(createTestMarkField());
+  });
+}
+
 const closeModalView = () => {
   modal.classList.add("hidden");
   studentForm.reset();
   studentDbId.value = "";
   formError.textContent = "";
+  resetTestMarks();
 };
 
 const loadStudentIntoForm = (student) => {
@@ -235,9 +281,24 @@ const loadStudentIntoForm = (student) => {
   studentGender.value = student.gender;
   studentCourse.value = student.course;
   studentDepartment.value = student.department;
-  studentMarks.value = student.marks;
+  studentMarks.value = student.marks ?? 0;
   studentAttendance.value = student.attendance;
   studentContact.value = student.contact;
+  if (testMarksList) {
+    testMarksList.innerHTML = "";
+    const scores = Array.isArray(student.test_scores) ? student.test_scores : [];
+    if (scores.length) {
+      scores.forEach((score, index) => {
+        testMarksList.appendChild(createTestMarkField(score));
+        const lastInput = testMarksList.querySelectorAll(".test-mark-input")[index];
+        if (lastInput) {
+          lastInput.value = score;
+        }
+      });
+    } else {
+      testMarksList.appendChild(createTestMarkField());
+    }
+  }
 };
 
 const submitStudent = async (payload, id = null) => {
@@ -356,6 +417,7 @@ studentForm.addEventListener("submit", async (event) => {
     course: studentCourse.value.trim(),
     department: studentDepartment.value.trim(),
     marks: studentMarks.value,
+    test_scores: getTestMarksValue(),
     attendance: studentAttendance.value,
     contact: studentContact.value.trim(),
   };
@@ -404,8 +466,11 @@ openAdd.addEventListener("click", () => {
   studentDbId.value = "";
   studentMarks.value = "0";
   studentAttendance.value = "0";
+  resetTestMarks();
   openModal("Add Student");
 });
+
+resetTestMarks();
 
 closeModal.addEventListener("click", closeModalView);
 

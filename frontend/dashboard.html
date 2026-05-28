@@ -91,7 +91,9 @@
                   <th>Name</th>
                   <th>Course</th>
                   <th>Department</th>
-                  <th>Marks</th>
+                  <th>Test 1</th>
+                  <th>Test 2</th>
+                  <th>Total</th>
                   <th>Attendance</th>
                   <th>Actions</th>
                 </tr>
@@ -212,6 +214,18 @@
             <input type="text" id="student-department" required />
           </label>
           <input type="hidden" id="student-marks" value="0" />
+          <div class="field">
+            <div class="field-header">
+              <span>Test Marks</span>
+              <button type="button" class="btn ghost small-btn" id="add-test-mark">Add More Marks</button>
+            </div>
+            <div id="test-marks-list" class="test-marks-list">
+              <label class="inline-field">
+                Test Mark 1
+                <input type="number" class="test-mark-input" min="0" max="100" placeholder="0" />
+              </label>
+            </div>
+          </div>
           <label class="field">
             Attendance %
             <input type="number" id="student-attendance" value="0" min="0" max="100" required />

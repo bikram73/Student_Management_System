@@ -56,24 +56,49 @@ def save_students(students: List[Dict[str, Any]]) -> None:
 
 
 def validate_student(payload: Dict[str, Any]) -> Tuple[bool, str]:
-    required = ["name", "age", "gender", "course", "department", "marks", "attendance", "contact"]
+    required = ["name", "age", "gender", "course", "department", "attendance", "contact"]
     for key in required:
         if key not in payload or str(payload[key]).strip() == "":
             return False, f"{key} is required."
     try:
         age = int(payload["age"])
-        marks = int(payload["marks"])
         attendance = float(payload["attendance"])
     except ValueError:
-        return False, "Age, marks, and attendance must be numeric."
+        return False, "Age and attendance must be numeric."
 
     if age <= 0 or age > 120:
         return False, "Age must be between 1 and 120."
-    if marks < 0 or marks > 100:
-        return False, "Marks must be between 0 and 100."
     if attendance < 0 or attendance > 100:
         return False, "Attendance must be between 0 and 100."
     return True, ""
+
+
+def parse_test_scores(value: Any) -> List[float]:
+    if value is None:
+        return []
+
+    if isinstance(value, list):
+        raw_values = value
+    else:
+        raw_values = [item.strip() for item in str(value).split(",") if item.strip()]
+
+    scores: List[float] = []
+    for item in raw_values:
+        try:
+            score = float(item)
+        except (TypeError, ValueError):
+            continue
+        if 0 <= score <= 100:
+            scores.append(round(score, 2))
+    return scores
+
+
+def derive_marks(payload: Dict[str, Any]) -> Tuple[int, List[float]]:
+    test_scores = parse_test_scores(payload.get("test_scores"))
+    if test_scores:
+        marks = int(round(sum(test_scores) / len(test_scores)))
+        return marks, test_scores
+    return int(payload.get("marks", 0)), []
 
 
 def generate_student_id(students: List[Dict[str, Any]]) -> str:
@@ -157,7 +182,6 @@ def ensure_attendance_base(record: Dict[str, Any]) -> Tuple[int, int]:
 
 
 def recompute_attendance(record: Dict[str, Any]) -> None:
-    base_present, base_total = ensure_attendance_base(record)
     daily = get_daily_attendance(record)
 
     daily_present = 0
@@ -172,8 +196,8 @@ def recompute_attendance(record: Dict[str, Any]) -> None:
         elif status == "absent":
             daily_total += 1
 
-    present_count = base_present + daily_present
-    total_count = base_total + daily_total
+    present_count = daily_present
+    total_count = daily_total
 
     record["attendance_present_count"] = present_count
     record["attendance_total_count"] = total_count
@@ -252,6 +276,8 @@ def add_student() -> Any:
     if any(s.get("student_id") == student_id for s in students):
         return jsonify({"error": "Student ID already exists."}), 400
 
+    marks, test_scores = derive_marks(payload)
+
     record = {
         "id": next_db_id(students),
         "student_id": student_id,
@@ -260,12 +286,14 @@ def add_student() -> Any:
         "gender": payload["gender"].strip(),
         "course": payload["course"].strip(),
         "department": payload["department"].strip(),
-        "marks": int(payload["marks"]),
+        "marks": marks,
+        "test_scores": test_scores,
+        "tests_count": len(test_scores),
         "attendance": float(payload["attendance"]),
-        "attendance_present_count": int(round(float(payload["attendance"]))),
-        "attendance_total_count": 100,
-        "attendance_base_present_count": int(round(float(payload["attendance"]))),
-        "attendance_base_total_count": 100,
+        "attendance_present_count": 0,
+        "attendance_total_count": 0,
+        "attendance_base_present_count": 0,
+        "attendance_base_total_count": 0,
         "attendance_daily": {},
         "contact": payload["contact"].strip(),
         "created_at": datetime.utcnow().isoformat(),
@@ -297,6 +325,8 @@ def update_student(student_id: int) -> Any:
     if not record:
         return jsonify({"error": "Student not found."}), 404
 
+    marks, test_scores = derive_marks(payload)
+
     record.update(
         {
             "name": payload["name"].strip(),
@@ -304,12 +334,14 @@ def update_student(student_id: int) -> Any:
             "gender": payload["gender"].strip(),
             "course": payload["course"].strip(),
             "department": payload["department"].strip(),
-            "marks": int(payload["marks"]),
+            "marks": marks,
+            "test_scores": test_scores,
+            "tests_count": len(test_scores),
             "attendance": float(payload["attendance"]),
-            "attendance_present_count": int(round(float(payload["attendance"]))),
-            "attendance_total_count": 100,
-            "attendance_base_present_count": int(round(float(payload["attendance"]))),
-            "attendance_base_total_count": 100,
+            "attendance_present_count": 0,
+            "attendance_total_count": 0,
+            "attendance_base_present_count": 0,
+            "attendance_base_total_count": 0,
             "attendance_daily": {},
             "contact": payload["contact"].strip(),
         }
