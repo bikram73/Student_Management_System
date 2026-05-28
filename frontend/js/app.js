@@ -393,9 +393,6 @@ attendanceTable.addEventListener("click", async (event) => {
     } else if (action === "reverse") {
       await updateTodayAttendance(id, "clear");
       logActivity(`Reversed today's attendance for ID ${id}`);
-    } else if (action === "save") {
-      await lockTodayAttendance(id);
-      logActivity(`Saved today's attendance permanently for ID ${id}`);
     }
 
     await fetchStats();
@@ -403,6 +400,18 @@ attendanceTable.addEventListener("click", async (event) => {
     await fetchAllStudentsForAttendance();
   } catch (err) {
     alert(err.message || "Attendance action failed.");
+  }
+});
+
+saveAttendanceAll.addEventListener("click", async () => {
+  try {
+    const result = await lockTodayAttendanceForAll();
+    logActivity(`Saved today's attendance for ${result.locked_count} students`);
+    await fetchStats();
+    await fetchStudents();
+    await fetchAllStudentsForAttendance();
+  } catch (err) {
+    alert(err.message || "Failed to save all attendance.");
   }
 });
 
