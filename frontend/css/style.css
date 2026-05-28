@@ -230,6 +230,9 @@ a {
   opacity: 0.9;
 }
 
+/* hide mobile hamburger by default; shown in mobile media queries */
+.hamburger { display: none; }
+
 .muted {
   color: var(--text-muted);
 }
@@ -617,21 +620,29 @@ a {
 
 /* Responsive improvements: off-canvas sidebar, tighter tables, modal tweaks */
 @media (max-width: 960px) {
+  .auth {
+    grid-template-columns: 1fr;
+  }
+
   .layout {
     position: relative;
+    grid-template-columns: 1fr;
   }
 
   .sidebar {
     position: fixed;
     top: 0;
-    left: -280px;
+    left: -320px; /* off-canvas */
     height: 100vh;
     width: 260px;
     z-index: 60;
-    transition: left 240ms ease;
-    padding-top: 20px;
-    padding-bottom: 20px;
+    transition: left 240ms ease, transform 240ms ease;
+    padding-top: 24px;
+    padding-bottom: 24px;
     box-shadow: 0 8px 30px rgba(2,6,23,0.35);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
   }
 
   body.sidebar-open .sidebar {
@@ -657,6 +668,12 @@ a {
 
   .report-output, .table-wrap table, .report-table {
     font-size: 13px;
+  }
+
+  /* ensure logout button anchors to bottom of sidebar */
+  .sidebar #logout {
+    margin-top: auto;
+    align-self: stretch;
   }
 }
 
