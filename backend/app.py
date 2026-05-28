@@ -47,7 +47,19 @@ def load_students() -> List[Dict[str, Any]]:
         data = json.loads(raw)
     except json.JSONDecodeError:
         return []
-    return data if isinstance(data, list) else []
+
+    students = data if isinstance(data, list) else []
+    changed = False
+    for record in students:
+        if not isinstance(record, dict):
+            continue
+        if normalize_attendance_record(record):
+            changed = True
+
+    if changed:
+        save_students(students)
+
+    return students
 
 
 def save_students(students: List[Dict[str, Any]]) -> None:
@@ -147,6 +159,47 @@ def attendance_percentage(present: int, total: int) -> float:
     if total <= 0:
         return 0.0
     return round((present / total) * 100.0, 2)
+
+
+def normalize_attendance_record(record: Dict[str, Any]) -> bool:
+    daily = get_daily_attendance(record)
+
+    daily_present = 0
+    daily_total = 0
+    for entry in daily.values():
+        if not isinstance(entry, dict):
+            continue
+        status = entry.get("status")
+        if status == "present":
+            daily_present += 1
+            daily_total += 1
+        elif status == "absent":
+            daily_total += 1
+
+    new_present = daily_present
+    new_total = daily_total
+    new_attendance = attendance_percentage(new_present, new_total)
+
+    changed = False
+    if record.get("attendance_present_count") != new_present:
+        record["attendance_present_count"] = new_present
+        changed = True
+    if record.get("attendance_total_count") != new_total:
+        record["attendance_total_count"] = new_total
+        changed = True
+    if float(record.get("attendance", 0.0)) != float(new_attendance):
+        record["attendance"] = new_attendance
+        changed = True
+
+    # Legacy base fields are now unused; keep them zeroed to avoid stale math.
+    if record.get("attendance_base_present_count") != 0:
+        record["attendance_base_present_count"] = 0
+        changed = True
+    if record.get("attendance_base_total_count") != 0:
+        record["attendance_base_total_count"] = 0
+        changed = True
+
+    return changed
 
 
 def today_key() -> str:
