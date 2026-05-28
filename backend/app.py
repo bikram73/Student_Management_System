@@ -519,10 +519,15 @@ def lock_today_attendance_all() -> Any:
 
 @app.get("/api/reports/top")
 def report_top() -> Any:
-    min_marks = int(request.args.get("min_marks", 85))
     students = load_students()
-    rows = [s for s in students if int(s.get("marks", 0)) >= min_marks]
+    if "min_marks" in request.args:
+        min_marks = int(request.args.get("min_marks", 85))
+        rows = [s for s in students if int(s.get("marks", 0)) >= min_marks]
+    else:
+        rows = list(students)
     rows.sort(key=lambda s: s.get("marks", 0), reverse=True)
+    if "min_marks" not in request.args:
+        rows = rows[:5]
     return jsonify({"data": rows})
 
 
