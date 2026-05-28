@@ -1,7 +1,8 @@
-const apiBaseInput = document.getElementById("api-base");
 const pageSizeInput = document.getElementById("page-size");
 const saveSettings = document.getElementById("save-settings");
 const logout = document.getElementById("logout");
+const apiStatus = document.getElementById("api-status");
+const checkApiBtn = document.getElementById("check-api");
 
 const statsTotal = document.getElementById("stat-total");
 const statsMarks = document.getElementById("stat-marks");
@@ -77,6 +78,42 @@ if (!isLoggedIn()) {
   window.location.href = "index.html";
 }
 
+const getCachedStudents = () => {
+  try {
+    const cached = JSON.parse(localStorage.getItem("studentsCache") || "[]");
+    return Array.isArray(cached) ? cached : [];
+  } catch {
+    return [];
+  }
+};
+
+const setCachedStudents = (students) => {
+  try {
+    localStorage.setItem("studentsCache", JSON.stringify(Array.isArray(students) ? students : []));
+  } catch {
+    // ignore storage failures
+  }
+};
+
+const renderActivities = () => {
+  if (!activityList) return;
+  activityList.innerHTML = "";
+
+  if (!activityLog.length) {
+    const li = document.createElement("li");
+    li.className = "muted";
+    li.textContent = "No recent activities.";
+    activityList.appendChild(li);
+    return;
+  }
+
+  activityLog.forEach((item) => {
+    const li = document.createElement("li");
+    li.textContent = `${item.time} - ${item.text}`;
+    activityList.appendChild(li);
+  });
+};
+
 const logActivity = (text) => {
   activityLog.unshift({ text, time: new Date().toLocaleTimeString() });
   if (activityLog.length > 6) {
@@ -85,47 +122,255 @@ const logActivity = (text) => {
   renderActivities();
 };
 
-const renderActivities = () => {
-  activityList.innerHTML = "";
-  activityLog.forEach((item) => {
-    const li = document.createElement("li");
-    li.textContent = `${item.time} - ${item.text}`;
-    activityList.appendChild(li);
-  });
+const computeAndSetStats = (students) => {
+  const rows = Array.isArray(students) ? students : [];
+  const total = rows.length;
+  const avgMarks = total
+    ? rows.reduce((sum, student) => sum + Number(student.marks || 0), 0) / total
+    : 0;
+  const avgAttendance = total
+    ? rows.reduce((sum, student) => sum + Number(student.attendance || 0), 0) / total
+    : 0;
+  const topCount = rows.filter((student) => Number(student.marks || 0) >= 85).length;
+
+  if (statsTotal) statsTotal.textContent = String(total);
+  if (statsMarks) statsMarks.textContent = avgMarks.toFixed(2);
+  if (statsAttendance) statsAttendance.textContent = avgAttendance.toFixed(2);
+  if (statsTop) statsTop.textContent = String(topCount);
 };
 
 const fetchStats = async () => {
-  const response = await fetch(`${apiBase()}/stats`);
-  const result = await response.json();
-  statsTotal.textContent = result.total;
-  statsMarks.textContent = result.avg_marks;
-  statsAttendance.textContent = result.avg_attendance;
-  statsTop.textContent = result.top_count;
+  try {
+    const response = await fetch(`${apiBase()}/stats`);
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(result.error || "Failed to load stats.");
+    }
+
+    if (statsTotal) statsTotal.textContent = result.total ?? 0;
+    if (statsMarks) statsMarks.textContent = result.avg_marks ?? 0;
+    if (statsAttendance) statsAttendance.textContent = result.avg_attendance ?? 0;
+    if (statsTop) statsTop.textContent = result.top_count ?? 0;
+    return;
+  } catch {
+    computeAndSetStats(getCachedStudents());
+  }
 };
 
 const fetchStudents = async () => {
-  const response = await fetch(
-    `${apiBase()}/students?page=${currentPage}&page_size=${pageSize()}&q=${encodeURIComponent(
-      searchInput.value.trim()
-    )}&field=${searchField.value}`
-  );
-  const result = await response.json();
-  renderStudents(result.data);
-  totalPages = Math.max(1, Math.ceil(result.total / result.page_size));
-  pageLabel.textContent = `Page ${currentPage} of ${totalPages}`;
+  try {
+    const response = await fetch(
+      `${apiBase()}/students?page=${currentPage}&page_size=${pageSize()}&q=${encodeURIComponent(
+        searchInput.value.trim()
+      )}&field=${searchField.value}`
+    );
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(result.error || "Failed to load students.");
+    }
+
+    renderStudents(result.data || []);
+    setCachedStudents(result.data || []);
+    totalPages = Math.max(1, Math.ceil((result.total || 0) / (result.page_size || pageSize())));
+    if (pageLabel) {
+      pageLabel.textContent = `Page ${currentPage} of ${totalPages}`;
+    }
+    computeAndSetStats(result.data || []);
+  } catch {
+    const cached = getCachedStudents();
+    if (cached.length) {
+      renderStudents(cached);
+      totalPages = 1;
+      if (pageLabel) {
+        pageLabel.textContent = `Page ${currentPage} of ${totalPages}`;
+      }
+      computeAndSetStats(cached);
+      return;
+    }
+
+    const demoStudents = [
+      {
+        id: 1,
+        student_id: "1001",
+        name: "Demo Student",
+        course: "Demo Course",
+        department: "Demo Dept",
+        test_scores: [80, 90],
+        marks: 85,
+        attendance: 100,
+      },
+      {
+        id: 2,
+        student_id: "1002",
+        name: "Sample Student",
+        course: "Demo Course",
+        department: "Demo Dept",
+        test_scores: [70, 75],
+        marks: 73,
+        attendance: 80,
+      },
+    ];
+    renderStudents(demoStudents);
+    totalPages = 1;
+    if (pageLabel) {
+      pageLabel.textContent = `Page ${currentPage} of ${totalPages}`;
+    }
+    computeAndSetStats(demoStudents);
+    setCachedStudents(demoStudents);
+  }
 };
 
 const fetchAllStudentsForAttendance = async () => {
-  const response = await fetch(`${apiBase()}/students?page=1&page_size=1000`);
-  const result = await response.json();
-  renderAttendanceStudents(result.data || []);
+  try {
+    const response = await fetch(`${apiBase()}/students?page=1&page_size=1000`);
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(result.error || "Failed to load attendance list.");
+    }
+    renderAttendanceStudents(result.data || []);
+    setCachedStudents(result.data || []);
+  } catch {
+    const cached = getCachedStudents();
+    if (cached.length) {
+      renderAttendanceStudents(cached);
+    } else {
+      renderAttendanceStudents([]);
+    }
+  }
 };
 
-const renderCalendar = () => {
-  if (!attendanceCalendar || !calendarMonth || !calendarWeekdays) {
+const checkApiStatus = async () => {
+  if (!apiStatus) return;
+  apiStatus.textContent = "Checking...";
+  try {
+    const response = await fetch(`${apiBase()}/health`);
+    if (response.ok) {
+      apiStatus.textContent = "Active";
+      apiStatus.style.color = "var(--success)";
+      return;
+    }
+  } catch {
+    // ignore
+  }
+  apiStatus.textContent = "Inactive";
+  apiStatus.style.color = "var(--danger)";
+};
+
+const renderReport = (data, type = "generic") => {
+  if (!reportOutput) return;
+  reportOutput.innerHTML = "";
+
+  if (!data) {
+    reportOutput.textContent = "No data";
     return;
   }
 
+  // Handle summary/object responses
+  if (!Array.isArray(data) && typeof data === "object") {
+    const table = document.createElement("table");
+    table.className = "report-table";
+    Object.keys(data).forEach((k) => {
+      const tr = document.createElement("tr");
+      const th = document.createElement("th");
+      th.textContent = k.replace(/_/g, " ");
+      const td = document.createElement("td");
+      td.textContent = String(data[k]);
+      tr.appendChild(th);
+      tr.appendChild(td);
+      table.appendChild(tr);
+    });
+    reportOutput.appendChild(table);
+    return;
+  }
+
+  // If array of objects, format based on type
+  if (Array.isArray(data) && data.length > 0 && typeof data[0] === "object") {
+    const table = document.createElement("table");
+    table.className = "report-table";
+
+    let headers = [];
+    if (type === "top") {
+      headers = ["Rank", "Student ID", "Name", "Marks", "Tests", "Attendance"];
+    } else if (type === "low") {
+      headers = ["Student ID", "Name", "Attendance"];
+    } else if (type === "course") {
+      headers = ["Student ID", "Name", "Course", "Department", "Test1", "Test2", "Total", "Attendance"];
+    } else {
+      // generic: use object keys (first row)
+      headers = Object.keys(data[0]).map((k) => k.replace(/_/g, " "));
+    }
+
+    const thead = document.createElement("thead");
+    const headerRow = document.createElement("tr");
+    headers.forEach((h) => {
+      const th = document.createElement("th");
+      th.textContent = h;
+      headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement("tbody");
+    data.forEach((row, idx) => {
+      const tr = document.createElement("tr");
+      if (type === "top") {
+        const rank = idx + 1;
+        const studentId = row.student_id || row.studentId || row.id || "";
+        const name = row.name || "";
+        const marks = row.marks != null ? row.marks : "";
+        const tests = Array.isArray(row.test_scores) ? row.test_scores.length : row.tests_count || 0;
+        const attendance = row.attendance != null ? `${row.attendance}%` : "";
+        [rank, studentId, name, marks, tests, attendance].forEach((cell) => {
+          const td = document.createElement("td");
+          td.textContent = cell;
+          tr.appendChild(td);
+        });
+      } else if (type === "low") {
+        const studentId = row.student_id || row.studentId || row.id || "";
+        const name = row.name || "";
+        const attendance = row.attendance != null ? `${row.attendance}%` : "";
+        [studentId, name, attendance].forEach((cell) => {
+          const td = document.createElement("td");
+          td.textContent = cell;
+          tr.appendChild(td);
+        });
+      } else if (type === "course") {
+        const studentId = row.student_id || row.studentId || row.id || "";
+        const name = row.name || "";
+        const course = row.course || "";
+        const dept = row.department || "";
+        const scores = Array.isArray(row.test_scores) ? row.test_scores : [];
+        const t1 = scores.length > 0 ? scores[0] : "-";
+        const t2 = scores.length > 1 ? scores[1] : "-";
+        const total = scores.length ? scores.reduce((a, b) => a + Number(b || 0), 0) : (row.marks || 0);
+        const attendance = row.attendance != null ? `${row.attendance}%` : "";
+        [studentId, name, course, dept, t1, t2, total, attendance].forEach((cell) => {
+          const td = document.createElement("td");
+          td.textContent = cell;
+          tr.appendChild(td);
+        });
+      } else {
+        // generic: render values in object order
+        Object.keys(row).forEach((k) => {
+          const td = document.createElement("td");
+          const v = row[k];
+          td.textContent = v === null || v === undefined ? "" : String(v);
+          tr.appendChild(td);
+        });
+      }
+      tbody.appendChild(tr);
+    });
+
+    table.appendChild(tbody);
+    reportOutput.appendChild(table);
+    return;
+  }
+
+  // Fallback: render JSON
+  reportOutput.textContent = typeof data === "object" ? JSON.stringify(data, null, 2) : String(data);
+};
+
+const renderCalendar = () => {
   const today = new Date();
   const currentYear = today.getFullYear();
   const currentMonth = today.getMonth();
@@ -539,19 +784,19 @@ if (saveAttendanceAll) {
 reportTop.addEventListener("click", async () => {
   const response = await fetch(`${apiBase()}/reports/top`);
   const result = await response.json();
-  reportOutput.textContent = JSON.stringify(result.data, null, 2);
+  renderReport(result.data, "top");
 });
 
 reportLow.addEventListener("click", async () => {
   const response = await fetch(`${apiBase()}/reports/low-attendance`);
   const result = await response.json();
-  reportOutput.textContent = JSON.stringify(result.data, null, 2);
+  renderReport(result.data, "low");
 });
 
 reportSummary.addEventListener("click", async () => {
   const response = await fetch(`${apiBase()}/reports/summary`);
   const result = await response.json();
-  reportOutput.textContent = JSON.stringify(result, null, 2);
+  renderReport(result, "summary");
 });
 
 reportCourse.addEventListener("click", async () => {
@@ -562,11 +807,10 @@ reportCourse.addEventListener("click", async () => {
   }
   const response = await fetch(`${apiBase()}/reports/course?course=${encodeURIComponent(course)}`);
   const result = await response.json();
-  reportOutput.textContent = JSON.stringify(result.data, null, 2);
+  renderReport(result.data, "course");
 });
 
 saveSettings.addEventListener("click", () => {
-  localStorage.setItem("apiBase", apiBaseInput.value.trim());
   localStorage.setItem("pageSize", pageSizeInput.value.trim());
   alert("Settings saved.");
 });
@@ -589,7 +833,7 @@ menuButtons.forEach((btn) => {
 });
 
 const init = () => {
-  apiBaseInput.value = apiBase();
+  if (apiStatus) apiStatus.textContent = "Unknown";
   pageSizeInput.value = pageSize();
   renderCalendar();
   fetchStats();

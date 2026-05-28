@@ -351,6 +351,25 @@ a {
   font-size: 14px;
 }
 
+.report-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.report-table th {
+  text-align: left;
+  padding: 8px 10px;
+  background: rgba(0,0,0,0.04);
+  font-weight: 700;
+}
+.report-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+.report-table tbody tr:nth-child(odd) td {
+  background: rgba(0,0,0,0.02);
+}
+
 .table-wrap th,
 .table-wrap td {
   text-align: left;
