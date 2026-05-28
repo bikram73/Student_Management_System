@@ -280,16 +280,68 @@ const updateTodayAttendance = async (id, status) => {
   return result.data;
 };
 
+const lockTodayAttendanceByStudent = async (id) => {
+  const response = await fetch(`${apiBase()}/attendance/${id}/today/lock`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  });
+
+  const text = await response.text();
+  let result = {};
+  try {
+    result = text ? JSON.parse(text) : {};
+  } catch {
+    result = {};
+  }
+
+  if (!response.ok) {
+    throw new Error(result.error || "Failed to lock today's attendance.");
+  }
+
+  return result.data;
+};
+
 const lockTodayAttendanceForAll = async () => {
   const response = await fetch(`${apiBase()}/attendance/today/lock-all`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
   });
-  const result = await response.json();
-  if (!response.ok) {
+
+  const text = await response.text();
+  let result = {};
+  try {
+    result = text ? JSON.parse(text) : {};
+  } catch {
+    result = {};
+  }
+
+  if (response.ok) {
+    return result;
+  }
+
+  if (response.status !== 404) {
     throw new Error(result.error || "Failed to save today's attendance for all students.");
   }
-  return result;
+
+  const studentsResponse = await fetch(`${apiBase()}/students?page=1&page_size=1000`);
+  const studentsResult = await studentsResponse.json();
+  if (!studentsResponse.ok) {
+    throw new Error(studentsResult.error || "Failed to load students for bulk save.");
+  }
+
+  let lockedCount = 0;
+  const rows = studentsResult.data || [];
+  for (const student of rows) {
+    const hasTodayMark = student.today_status === "present" || student.today_status === "absent";
+    if (!hasTodayMark || student.today_locked) {
+      continue;
+    }
+
+    await lockTodayAttendanceByStudent(student.id);
+    lockedCount += 1;
+  }
+
+  return { locked_count: lockedCount };
 };
 
 studentForm.addEventListener("submit", async (event) => {
@@ -350,6 +402,8 @@ studentsTable.addEventListener("click", async (event) => {
 openAdd.addEventListener("click", () => {
   studentForm.reset();
   studentDbId.value = "";
+  studentMarks.value = "0";
+  studentAttendance.value = "0";
   openModal("Add Student");
 });
 
@@ -403,17 +457,19 @@ attendanceTable.addEventListener("click", async (event) => {
   }
 });
 
-saveAttendanceAll.addEventListener("click", async () => {
-  try {
-    const result = await lockTodayAttendanceForAll();
-    logActivity(`Saved today's attendance for ${result.locked_count} students`);
-    await fetchStats();
-    await fetchStudents();
-    await fetchAllStudentsForAttendance();
-  } catch (err) {
-    alert(err.message || "Failed to save all attendance.");
-  }
-});
+if (saveAttendanceAll) {
+  saveAttendanceAll.addEventListener("click", async () => {
+    try {
+      const result = await lockTodayAttendanceForAll();
+      logActivity(`Saved today's attendance for ${result.locked_count || 0} students`);
+      await fetchStats();
+      await fetchStudents();
+      await fetchAllStudentsForAttendance();
+    } catch (err) {
+      alert(err.message || "Failed to save all attendance.");
+    }
+  });
+}
 
 reportTop.addEventListener("click", async () => {
   const response = await fetch(`${apiBase()}/reports/top`);
