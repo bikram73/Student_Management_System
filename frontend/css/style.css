@@ -699,4 +699,30 @@ a {
   }
 
   .report-output { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  /* Make stat cards display as single-row items with label and value side-by-side */
+  .cards {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .stat-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-radius: 12px;
+  }
+
+  .stat-card p {
+    margin: 0;
+    font-size: 14px;
+    color: var(--text-muted);
+  }
+
+  .stat-card h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+  }
 }
