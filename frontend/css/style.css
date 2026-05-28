@@ -336,6 +336,89 @@ a {
   align-items: center;
 }
 
+.attendance-panel {
+  display: grid;
+  gap: 16px;
+}
+
+.calendar-card {
+  background: var(--card);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  padding: 18px;
+}
+
+.calendar-header {
+  margin-bottom: 12px;
+}
+
+.calendar-weekdays,
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.calendar-weekdays {
+  margin-bottom: 8px;
+  color: var(--text-muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.calendar-day {
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f1f5f9;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.calendar-day.empty {
+  background: transparent;
+}
+
+.calendar-day.today {
+  background: var(--primary);
+  color: #fff;
+}
+
+.attendance-table-wrap {
+  margin-top: 0;
+}
+
+.attendance-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.attendance-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.attendance-status.locked {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .modal {
   position: fixed;
   inset: 0;
@@ -392,5 +475,10 @@ a {
   .topbar {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .calendar-day {
+    height: 32px;
+    font-size: 13px;
   }
 }

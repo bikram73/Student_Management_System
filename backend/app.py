@@ -97,6 +97,98 @@ def next_db_id(students: List[Dict[str, Any]]) -> int:
     return max(s.get("id", 0) for s in students) + 1
 
 
+def initialize_attendance_counters(record: Dict[str, Any]) -> Tuple[int, int]:
+    total = record.get("attendance_total_count")
+    present = record.get("attendance_present_count")
+
+    if isinstance(total, int) and isinstance(present, int) and total >= 0 and present >= 0:
+        if present > total:
+            present = total
+            record["attendance_present_count"] = present
+        return present, total
+
+    attendance_percent = float(record.get("attendance", 0.0))
+    attendance_percent = max(0.0, min(100.0, attendance_percent))
+
+    total = 100
+    present = int(round((attendance_percent / 100.0) * total))
+
+    record["attendance_present_count"] = present
+    record["attendance_total_count"] = total
+    return present, total
+
+
+def attendance_percentage(present: int, total: int) -> float:
+    if total <= 0:
+        return 0.0
+    return round((present / total) * 100.0, 2)
+
+
+def today_key() -> str:
+    return datetime.now().date().isoformat()
+
+
+def get_daily_attendance(record: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
+    raw = record.get("attendance_daily")
+    if isinstance(raw, dict):
+        return raw
+    record["attendance_daily"] = {}
+    return record["attendance_daily"]
+
+
+def ensure_attendance_base(record: Dict[str, Any]) -> Tuple[int, int]:
+    base_present = record.get("attendance_base_present_count")
+    base_total = record.get("attendance_base_total_count")
+    if isinstance(base_present, int) and isinstance(base_total, int):
+        if base_present < 0:
+            base_present = 0
+        if base_total < 0:
+            base_total = 0
+        if base_present > base_total:
+            base_present = base_total
+        record["attendance_base_present_count"] = base_present
+        record["attendance_base_total_count"] = base_total
+        return base_present, base_total
+
+    present_count, total_count = initialize_attendance_counters(record)
+    record["attendance_base_present_count"] = present_count
+    record["attendance_base_total_count"] = total_count
+    return present_count, total_count
+
+
+def recompute_attendance(record: Dict[str, Any]) -> None:
+    base_present, base_total = ensure_attendance_base(record)
+    daily = get_daily_attendance(record)
+
+    daily_present = 0
+    daily_total = 0
+    for entry in daily.values():
+        if not isinstance(entry, dict):
+            continue
+        status = entry.get("status")
+        if status == "present":
+            daily_present += 1
+            daily_total += 1
+        elif status == "absent":
+            daily_total += 1
+
+    present_count = base_present + daily_present
+    total_count = base_total + daily_total
+
+    record["attendance_present_count"] = present_count
+    record["attendance_total_count"] = total_count
+    record["attendance"] = attendance_percentage(present_count, total_count)
+
+
+def serialize_student(record: Dict[str, Any]) -> Dict[str, Any]:
+    data = dict(record)
+    daily = get_daily_attendance(record)
+    today_entry = daily.get(today_key(), {})
+    data["today_status"] = today_entry.get("status")
+    data["today_locked"] = bool(today_entry.get("locked", False))
+    return data
+
+
 @app.get("/api/health")
 def health() -> Any:
     return jsonify({"status": "ok"})
@@ -136,7 +228,7 @@ def get_students() -> Any:
     total = len(students)
     start = (page - 1) * page_size
     end = start + page_size
-    page_rows = students[start:end]
+    page_rows = [serialize_student(s) for s in students[start:end]]
 
     return jsonify(
         {
@@ -170,13 +262,18 @@ def add_student() -> Any:
         "department": payload["department"].strip(),
         "marks": int(payload["marks"]),
         "attendance": float(payload["attendance"]),
+        "attendance_present_count": int(round(float(payload["attendance"]))),
+        "attendance_total_count": 100,
+        "attendance_base_present_count": int(round(float(payload["attendance"]))),
+        "attendance_base_total_count": 100,
+        "attendance_daily": {},
         "contact": payload["contact"].strip(),
         "created_at": datetime.utcnow().isoformat(),
     }
     students.append(record)
     save_students(students)
 
-    return jsonify({"data": record})
+    return jsonify({"data": serialize_student(record)})
 
 
 @app.get("/api/students/<int:student_id>")
@@ -185,7 +282,7 @@ def get_student(student_id: int) -> Any:
     record = next((s for s in students if s.get("id") == student_id), None)
     if not record:
         return jsonify({"error": "Student not found."}), 404
-    return jsonify({"data": record})
+    return jsonify({"data": serialize_student(record)})
 
 
 @app.put("/api/students/<int:student_id>")
@@ -209,12 +306,17 @@ def update_student(student_id: int) -> Any:
             "department": payload["department"].strip(),
             "marks": int(payload["marks"]),
             "attendance": float(payload["attendance"]),
+            "attendance_present_count": int(round(float(payload["attendance"]))),
+            "attendance_total_count": 100,
+            "attendance_base_present_count": int(round(float(payload["attendance"]))),
+            "attendance_base_total_count": 100,
+            "attendance_daily": {},
             "contact": payload["contact"].strip(),
         }
     )
     save_students(students)
 
-    return jsonify({"data": record})
+    return jsonify({"data": serialize_student(record)})
 
 
 @app.delete("/api/students/<int:student_id>")
@@ -233,18 +335,76 @@ def update_attendance(student_id: int) -> Any:
     payload = request.get_json(silent=True) or {}
     present = bool(payload.get("present", False))
 
+    status = "present" if present else "absent"
+
     students = load_students()
     record = next((s for s in students if s.get("id") == student_id), None)
     if not record:
         return jsonify({"error": "Student not found."}), 404
 
-    attendance = float(record.get("attendance", 0))
-    attendance = min(100.0, attendance + (1.0 if present else -1.0))
-    attendance = max(0.0, attendance)
-    record["attendance"] = attendance
+    daily = get_daily_attendance(record)
+    key = today_key()
+    existing = daily.get(key, {})
+    if existing.get("locked"):
+        return jsonify({"error": "Today's attendance is locked for this student."}), 400
+
+    daily[key] = {"status": status, "locked": False}
+    recompute_attendance(record)
     save_students(students)
 
-    return jsonify({"data": record})
+    return jsonify({"data": serialize_student(record)})
+
+
+@app.post("/api/attendance/<int:student_id>/today")
+def update_today_attendance(student_id: int) -> Any:
+    payload = request.get_json(silent=True) or {}
+    status = str(payload.get("status", "")).strip().lower()
+    if status not in {"present", "absent", "clear"}:
+        return jsonify({"error": "status must be present, absent, or clear."}), 400
+
+    students = load_students()
+    record = next((s for s in students if s.get("id") == student_id), None)
+    if not record:
+        return jsonify({"error": "Student not found."}), 404
+
+    daily = get_daily_attendance(record)
+    key = today_key()
+    existing = daily.get(key, {})
+    if existing.get("locked"):
+        return jsonify({"error": "Today's attendance is locked for this student."}), 400
+
+    if status == "clear":
+        if key in daily:
+            del daily[key]
+    else:
+        daily[key] = {
+            "status": status,
+            "locked": bool(existing.get("locked", False)),
+        }
+
+    recompute_attendance(record)
+    save_students(students)
+
+    return jsonify({"data": serialize_student(record)})
+
+
+@app.post("/api/attendance/<int:student_id>/today/lock")
+def lock_today_attendance(student_id: int) -> Any:
+    students = load_students()
+    record = next((s for s in students if s.get("id") == student_id), None)
+    if not record:
+        return jsonify({"error": "Student not found."}), 404
+
+    daily = get_daily_attendance(record)
+    key = today_key()
+    entry = daily.get(key)
+    if not isinstance(entry, dict) or entry.get("status") not in {"present", "absent"}:
+        return jsonify({"error": "Mark attendance for today before locking."}), 400
+
+    entry["locked"] = True
+    recompute_attendance(record)
+    save_students(students)
+    return jsonify({"data": serialize_student(record)})
 
 
 @app.get("/api/reports/top")

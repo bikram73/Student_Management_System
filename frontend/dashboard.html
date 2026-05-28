@@ -109,12 +109,30 @@
         <section class="section hidden" id="attendance-section">
           <div class="section-header">
             <h3>Attendance</h3>
-            <p class="muted">Select a student row in the table to mark attendance.</p>
+            <p class="muted">Mark once, reverse if needed, then save today to lock it permanently for that student.</p>
           </div>
-          <div class="attendance-actions">
-            <input id="attendance-id" type="number" placeholder="Student DB ID" />
-            <button class="btn success" id="mark-present">Mark Present</button>
-            <button class="btn danger" id="mark-absent">Mark Absent</button>
+          <div class="attendance-panel">
+            <div class="calendar-card">
+              <div class="calendar-header">
+                <h4 id="calendar-month"></h4>
+              </div>
+              <div class="calendar-weekdays" id="calendar-weekdays"></div>
+              <div class="calendar-grid" id="attendance-calendar"></div>
+            </div>
+            <div class="table-wrap attendance-table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Student ID</th>
+                    <th>Name</th>
+                    <th>Attendance %</th>
+                    <th>Today Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="attendance-table"></tbody>
+              </table>
+            </div>
           </div>
         </section>
 

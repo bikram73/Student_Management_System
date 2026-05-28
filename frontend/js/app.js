@@ -35,9 +35,10 @@ const studentAttendance = document.getElementById("student-attendance");
 const studentContact = document.getElementById("student-contact");
 
 const activityList = document.getElementById("activity-list");
-const markPresent = document.getElementById("mark-present");
-const markAbsent = document.getElementById("mark-absent");
-const attendanceId = document.getElementById("attendance-id");
+const attendanceCalendar = document.getElementById("attendance-calendar");
+const calendarMonth = document.getElementById("calendar-month");
+const calendarWeekdays = document.getElementById("calendar-weekdays");
+const attendanceTable = document.getElementById("attendance-table");
 
 const reportOutput = document.getElementById("report-output");
 const reportTop = document.getElementById("report-top");
@@ -58,6 +59,7 @@ const sections = {
 let currentPage = 1;
 let totalPages = 1;
 let activityLog = [];
+const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 const apiBase = () => window.API_BASE || localStorage.getItem("apiBase") || "http://localhost:5000/api";
 
@@ -108,6 +110,80 @@ const fetchStudents = async () => {
   renderStudents(result.data);
   totalPages = Math.max(1, Math.ceil(result.total / result.page_size));
   pageLabel.textContent = `Page ${currentPage} of ${totalPages}`;
+};
+
+const fetchAllStudentsForAttendance = async () => {
+  const response = await fetch(`${apiBase()}/students?page=1&page_size=1000`);
+  const result = await response.json();
+  renderAttendanceStudents(result.data || []);
+};
+
+const renderCalendar = () => {
+  if (!attendanceCalendar || !calendarMonth || !calendarWeekdays) {
+    return;
+  }
+
+  const today = new Date();
+  const currentYear = today.getFullYear();
+  const currentMonth = today.getMonth();
+
+  const firstDayDate = new Date(currentYear, currentMonth, 1);
+  const firstWeekDay = firstDayDate.getDay();
+  const totalDays = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+  calendarMonth.textContent = firstDayDate.toLocaleDateString(undefined, {
+    month: "long",
+    year: "numeric",
+  });
+
+  calendarWeekdays.innerHTML = weekDays.map((day) => `<span>${day}</span>`).join("");
+
+  attendanceCalendar.innerHTML = "";
+  for (let i = 0; i < firstWeekDay; i += 1) {
+    const emptyCell = document.createElement("span");
+    emptyCell.className = "calendar-day empty";
+    attendanceCalendar.appendChild(emptyCell);
+  }
+
+  for (let day = 1; day <= totalDays; day += 1) {
+    const cell = document.createElement("span");
+    cell.className = "calendar-day";
+    cell.textContent = day;
+
+    if (day === today.getDate()) {
+      cell.classList.add("today");
+    }
+
+    attendanceCalendar.appendChild(cell);
+  }
+};
+
+const renderAttendanceStudents = (students) => {
+  if (!attendanceTable) {
+    return;
+  }
+
+  attendanceTable.innerHTML = "";
+  if (!students.length) {
+    const row = document.createElement("tr");
+    row.innerHTML = '<td colspan="4" class="muted">No students found.</td>';
+    attendanceTable.appendChild(row);
+    return;
+  }
+
+  students.forEach((student) => {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${student.student_id}</td>
+      <td>${student.name}</td>
+      <td>${student.attendance}%</td>
+      <td class="actions">
+        <button class="btn success" data-attendance-id="${student.id}" data-present="true">Mark Present</button>
+        <button class="btn danger" data-attendance-id="${student.id}" data-present="false">Mark Absent</button>
+      </td>
+    `;
+    attendanceTable.appendChild(row);
+  });
 };
 
 const renderStudents = (students) => {
@@ -274,28 +350,24 @@ nextPage.addEventListener("click", () => {
   fetchStudents();
 });
 
-markPresent.addEventListener("click", async () => {
-  const id = parseInt(attendanceId.value, 10);
-  if (!id) {
-    alert("Enter a student DB ID.");
+attendanceTable.addEventListener("click", async (event) => {
+  const button = event.target.closest("button[data-attendance-id]");
+  if (!button) {
     return;
   }
-  await updateAttendance(id, true);
-  logActivity(`Marked present for ID ${id}`);
-  await fetchStats();
-  await fetchStudents();
-});
 
-markAbsent.addEventListener("click", async () => {
-  const id = parseInt(attendanceId.value, 10);
+  const id = parseInt(button.dataset.attendanceId, 10);
+  const isPresent = button.dataset.present === "true";
+
   if (!id) {
-    alert("Enter a student DB ID.");
     return;
   }
-  await updateAttendance(id, false);
-  logActivity(`Marked absent for ID ${id}`);
+
+  await updateAttendance(id, isPresent);
+  logActivity(`Marked ${isPresent ? "present" : "absent"} for ID ${id}`);
   await fetchStats();
   await fetchStudents();
+  await fetchAllStudentsForAttendance();
 });
 
 reportTop.addEventListener("click", async () => {
@@ -353,8 +425,10 @@ menuButtons.forEach((btn) => {
 const init = () => {
   apiBaseInput.value = apiBase();
   pageSizeInput.value = pageSize();
+  renderCalendar();
   fetchStats();
   fetchStudents();
+  fetchAllStudentsForAttendance();
 };
 
 init();
