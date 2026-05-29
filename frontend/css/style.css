@@ -847,13 +847,11 @@ a {
     padding: 0;
     border-radius: 12px;
     overflow: hidden;
-    background: transparent;
   }
 
   .table-wrap table {
     font-size: 12px;
     width: 100%;
-    background: transparent;
   }
 
   /* Hide table header on mobile and show as data attributes */
@@ -882,12 +880,13 @@ a {
 
   .table-wrap td {
     display: grid;
-    grid-template-columns: 100px 1fr;
-    gap: 12px;
-    align-items: flex-start;
+    grid-template-columns: auto 1fr;
+    gap: 8px;
+    align-items: center;
     padding: 0;
     font-size: 13px;
     border-bottom: none;
+    padding-bottom: 0;
   }
 
   .table-wrap td::before {
@@ -895,35 +894,25 @@ a {
     font-weight: 600;
     color: var(--text-muted);
     font-size: 12px;
-    text-transform: capitalize;
   }
 
-  /* Special styling for action cells */
-  .table-wrap td.actions {
-    display: block;
+  /* Special styling for action buttons in table rows */
+  .table-wrap td:last-child {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
     padding-top: 8px;
     border-top: 1px solid #f0f1f3;
+    grid-template-columns: none;
   }
 
-  .table-wrap td.actions::before {
-    display: block;
-    margin-bottom: 8px;
-  }
-
-  .table-wrap .attendance-row-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .table-wrap .attendance-row-actions button {
-    width: 100%;
-    padding: 8px 12px;
-    font-size: 12px;
+  .table-wrap td:last-child::before {
+    display: none;
   }
 
   .table-wrap button {
-    width: auto;
+    flex: 1;
+    min-width: 70px;
     padding: 8px 12px;
     font-size: 12px;
   }
