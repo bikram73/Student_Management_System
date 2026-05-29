@@ -437,6 +437,17 @@ const renderAttendanceStudents = (students) => {
         </div>
       </td>
     `;
+
+    // Add data-label attributes for responsive mobile view
+    try {
+      const labels = ["Student ID", "Name", "Attendance %", "Today Status", "Actions"];
+      Array.from(row.querySelectorAll("td")).forEach((td, idx) => {
+        td.setAttribute("data-label", labels[idx] || "");
+      });
+    } catch (e) {
+      // ignore
+    }
+
     attendanceTable.appendChild(row);
   });
 };
@@ -465,6 +476,28 @@ const renderStudents = (students) => {
         <button class="btn danger" data-action="delete" data-id="${student.id}">Delete</button>
       </td>
     `;
+
+    // Attach data-label attributes so mobile CSS can show labels
+    try {
+      const labels = [
+        "ID",
+        "Student ID",
+        "Name",
+        "Course",
+        "Department",
+        "Test 1",
+        "Test 2",
+        "Total",
+        "Attendance",
+        "Actions",
+      ];
+      Array.from(row.querySelectorAll("td")).forEach((td, idx) => {
+        td.setAttribute("data-label", labels[idx] || "");
+      });
+    } catch (e) {
+      // ignore
+    }
+
     studentsTable.appendChild(row);
   });
 };
