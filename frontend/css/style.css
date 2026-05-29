@@ -700,6 +700,66 @@ a {
 
   .report-output { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
+  /* Students section mobile layout */
+  #students-section .section-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  #students-section .section-actions {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  #students-section .section-actions select,
+  #students-section .section-actions input,
+  #students-section .section-actions button {
+    width: 100%;
+  }
+
+  #students-section .table-wrap {
+    padding: 10px;
+    border-radius: 14px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #students-section table {
+    min-width: 760px;
+    font-size: 12px;
+  }
+
+  #students-section th,
+  #students-section td {
+    padding: 8px 6px;
+    white-space: nowrap;
+  }
+
+  #students-section .actions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  #students-section .actions .btn {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  .pagination {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .pagination .btn,
+  .pagination span {
+    width: 100%;
+    text-align: center;
+  }
+
   /* Make stat cards display as single-row items with label and value side-by-side */
   .cards {
     grid-template-columns: 1fr;
