@@ -10,10 +10,6 @@
   --text: #1e293b;
   --text-muted: #64748b;
   --shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
-  --safe-area-inset-left: env(safe-area-inset-left, 0);
-  --safe-area-inset-right: env(safe-area-inset-right, 0);
-  --safe-area-inset-top: env(safe-area-inset-top, 0);
-  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0);
 }
 
 * {
@@ -199,17 +195,6 @@ a {
   border-radius: 12px;
   border: 1px solid #e2e8f0;
   font-size: 14px;
-  min-height: 44px;
-  -webkit-appearance: none;
-  appearance: none;
-  transition: border-color 150ms ease;
-}
-
-.field input:focus,
-.field select:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 .btn {
@@ -218,16 +203,6 @@ a {
   border: none;
   cursor: pointer;
   font-weight: 600;
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  -webkit-tap-highlight-color: transparent;
-  transition: all 150ms ease;
-}
-
-.btn:active {
-  transform: scale(0.98);
 }
 
 .btn.primary {
@@ -302,9 +277,6 @@ a {
   text-align: left;
   cursor: pointer;
   font-weight: 600;
-  min-height: 44px;
-  transition: all 150ms ease;
-  -webkit-tap-highlight-color: transparent;
 }
 
 .menu-btn.active,
@@ -315,8 +287,6 @@ a {
 
 .content {
   padding: 32px 36px 64px;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
 }
 
 .topbar {
@@ -673,19 +643,10 @@ a {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    overflow-y: auto;
   }
 
   body.sidebar-open .sidebar {
     left: 0;
-  }
-
-  body.sidebar-open::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.4);
-    z-index: 50;
   }
 
   .hamburger {
@@ -695,7 +656,6 @@ a {
     padding: 8px 10px;
     font-size: 18px;
     margin-right: 8px;
-    border-radius: 8px;
   }
 
   .content {
@@ -715,439 +675,54 @@ a {
     margin-top: auto;
     align-self: stretch;
   }
-
-  .topbar {
-    margin-bottom: 16px;
-  }
-
-  .topbar input {
-    min-width: 180px;
-  }
 }
 
 @media (max-width: 600px) {
-  /* Auth page mobile */
-  .auth {
-    padding: 24px 16px;
-    gap: 24px;
-  }
-
-  .auth-card {
-    padding: 20px 16px;
-    border-radius: 16px;
-  }
-
-  .auth-card h1 {
-    font-size: 24px;
-  }
-
-  .auth-visual {
-    padding: 20px;
-    border-radius: 16px;
-  }
-
-  .auth-visual-card {
-    padding: 16px;
-    border-radius: 12px;
-    font-size: 14px;
-  }
-
-  .card-glow {
-    width: 200px;
-    height: 200px;
-    top: -80px;
-    right: -60px;
-  }
-
-  /* Dashboard mobile */
-  .topbar {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-  }
-
-  .topbar input {
-    min-width: auto;
-    width: 100%;
-  }
-
-  .topbar-actions {
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .topbar-actions button {
-    width: 100%;
-  }
-
-  .topbar-actions input {
-    width: 100%;
-  }
-
-  /* Stats cards stacked */
-  .cards {
-    grid-template-columns: 1fr;
-    gap: 12px;
-    margin-top: 16px;
-  }
-
-  .stat-card {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 12px;
-    border-radius: 12px;
-    gap: 8px;
-  }
-
-  .stat-card p {
-    margin: 0;
+  .topbar input { min-width: 120px; }
+  .table-wrap th, .table-wrap td, .report-table th, .report-table td {
+    padding: 8px 6px;
     font-size: 13px;
-    color: var(--text-muted);
-    grid-column: 1;
-  }
-
-  .stat-card h2 {
-    margin: 0;
-    font-size: 18px;
-    font-weight: 700;
-    grid-column: 2;
-    text-align: right;
-  }
-
-  /* Sections */
-  .section {
-    margin-top: 20px;
-  }
-
-  .section-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-
-  .section-actions {
-    flex-direction: column;
-    width: 100%;
-    gap: 8px;
-  }
-
-  .section-actions select,
-  .section-actions input {
-    width: 100%;
-  }
-
-  .section-actions button {
-    width: 100%;
-  }
-
-  /* Tables - optimize for mobile */
-  .table-wrap {
-    padding: 0;
-    border-radius: 12px;
-    overflow: hidden;
-  }
-
-  .table-wrap table {
-    font-size: 12px;
-    width: 100%;
-  }
-
-  /* Hide table header on mobile and show as data attributes */
-  .table-wrap thead {
-    display: none;
-  }
-
-  .table-wrap tbody {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding: 12px;
-  }
-
-  .table-wrap tr {
-    display: flex;
-    flex-direction: column;
-    background: var(--card);
-    border-radius: 10px;
-    padding: 12px;
-    gap: 8px;
-    border-bottom: none;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-    border: 1px solid #f0f1f3;
-  }
-
-  .table-wrap td {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 8px;
-    align-items: center;
-    padding: 0;
-    font-size: 13px;
-    border-bottom: none;
-    padding-bottom: 0;
-  }
-
-  .table-wrap td::before {
-    content: attr(data-label);
-    font-weight: 600;
-    color: var(--text-muted);
-    font-size: 12px;
-  }
-
-  /* Special styling for action buttons in table rows */
-  .table-wrap td:last-child {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    padding-top: 8px;
-    border-top: 1px solid #f0f1f3;
-    grid-template-columns: none;
-  }
-
-  .table-wrap td:last-child::before {
-    display: none;
-  }
-
-  .table-wrap button {
-    flex: 1;
-    min-width: 70px;
-    padding: 8px 12px;
-    font-size: 12px;
-  }
-
-  /* Attendance section */
-  .attendance-panel {
-    gap: 12px;
-  }
-
-  .calendar-card {
-    padding: 12px;
-    border-radius: 12px;
-  }
-
-  .calendar-weekdays,
-  .calendar-grid {
-    gap: 4px;
-  }
-
-  .calendar-day {
-    height: 28px;
-    font-size: 11px;
-    border-radius: 6px;
-  }
-
-  .attendance-table-wrap {
-    margin-top: 12px;
-  }
-
-  .attendance-row-actions {
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .attendance-row-actions button {
-    width: 100%;
-    font-size: 12px;
-    padding: 6px 8px;
-  }
-
-  /* Pagination */
-  .pagination {
-    justify-content: center;
-    gap: 8px;
-    margin-top: 12px;
-  }
-
-  .pagination button {
-    padding: 8px 12px;
-    font-size: 12px;
-  }
-
-  /* Report and output */
-  .report-output {
-    min-height: 200px;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    font-size: 12px;
-    padding: 12px;
-  }
-
-  .report-table {
-    font-size: 12px;
-  }
-
-  .report-table th,
-  .report-table td {
-    padding: 6px 8px;
-    font-size: 11px;
-  }
-
-  .report-actions {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 8px;
-    margin-top: 12px;
-  }
-
-  .report-actions button {
-    width: 100%;
-    font-size: 13px;
-  }
-
-  /* Modal improvements */
-  .modal {
-    padding: 16px;
   }
 
   .modal-card {
-    width: 100%;
-    border-radius: 16px;
-    padding: 14px;
-    max-height: calc(100vh - 32px);
-  }
-
-  .modal-header {
-    margin-bottom: 12px;
-  }
-
-  .modal-header h3 {
-    font-size: 18px;
-  }
-
-  #student-form {
-    flex-direction: column;
-    max-height: calc(100vh - 140px);
-    gap: 10px;
+    width: 95%;
+    padding: 12px;
   }
 
   #student-form > label.field {
-    min-width: auto;
-    width: 100%;
-    flex-basis: auto;
+    min-width: 100%;
+    flex-basis: 100%;
   }
 
-  #student-form > div.field {
-    width: 100%;
+  .calendar-weekdays, .calendar-grid {
+    gap: 6px;
   }
 
-  #student-form > button {
-    width: 100%;
-  }
+  .report-output { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
-  .field input,
-  .field select {
-    font-size: 16px;
-    padding: 12px;
-  }
-
-  .btn {
-    padding: 12px 16px;
-    font-size: 14px;
-  }
-
-  /* Activity list */
-  .activity {
-    gap: 10px;
-  }
-
-  .activity li {
-    padding: 12px 14px;
-    border-radius: 10px;
-    font-size: 13px;
-  }
-
-  /* Settings */
-  .settings-grid {
-    max-width: 100%;
+  /* Make stat cards display as single-row items with label and value side-by-side */
+  .cards {
+    grid-template-columns: 1fr;
     gap: 12px;
   }
 
-  /* Content padding */
-  .content {
-    padding: 16px 14px 50px;
-  }
-}
-
-/* Extra small screens - phones */
-@media (max-width: 380px) {
-  .auth {
-    padding: 16px 12px;
-    gap: 16px;
-  }
-
-  .auth-card {
-    padding: 16px 12px;
-  }
-
-  .auth-card h1 {
-    font-size: 20px;
-  }
-
-  .topbar h1 {
-    font-size: 18px;
-  }
-
-  .topbar p {
-    font-size: 12px;
-  }
-
   .stat-card {
-    padding: 10px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-radius: 12px;
   }
 
   .stat-card p {
-    font-size: 12px;
+    margin: 0;
+    font-size: 14px;
+    color: var(--text-muted);
   }
 
   .stat-card h2 {
-    font-size: 16px;
-  }
-
-  .table-wrap th,
-  .table-wrap td {
-    padding: 6px 4px;
-    font-size: 11px;
-  }
-
-  .btn {
-    padding: 10px 12px;
-    font-size: 13px;
-  }
-
-  .field input,
-  .field select {
-    font-size: 16px;
-    padding: 10px;
-  }
-
-  .content {
-    padding: 12px 10px 40px;
-  }
-
-  .modal-card {
-    padding: 12px;
-  }
-}
-
-/* Landscape orientation tweaks */
-@media (max-height: 500px) {
-  .auth {
-    padding: 20px;
-    min-height: auto;
-  }
-
-  .modal-card {
-    max-height: 90vh;
-  }
-
-  .field {
-    gap: 4px;
-  }
-
-  .field input,
-  .field select {
-    padding: 8px 10px;
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
   }
 }
