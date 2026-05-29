@@ -65,7 +65,15 @@ let totalPages = 1;
 let activityLog = [];
 const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-const apiBase = () => window.API_BASE || localStorage.getItem("apiBase") || "http://localhost:5000/api";
+const defaultApiBase = () => {
+  const host = window.location.hostname;
+  if (host === "localhost" || host === "127.0.0.1") {
+    return "http://localhost:5000/api";
+  }
+  return "/api";
+};
+
+const apiBase = () => window.API_BASE || localStorage.getItem("apiBase") || defaultApiBase();
 
 const pageSize = () => {
   const value = parseInt(localStorage.getItem("pageSize") || "10", 10);
