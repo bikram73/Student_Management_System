@@ -2,7 +2,11 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes" />
+    <meta name="theme-color" content="#2563eb" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Student Management" />
     <title>Student Management System</title>
     <link rel="stylesheet" href="css/style.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -83,25 +87,25 @@
               <button class="btn ghost" id="search-btn">Search</button>
             </div>
           </div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Student ID</th>
-                  <th>Name</th>
-                  <th>Course</th>
-                  <th>Department</th>
-                  <th>Test 1</th>
-                  <th>Test 2</th>
-                  <th>Total</th>
-                  <th>Attendance</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody id="students-table"></tbody>
-            </table>
-          </div>
+           <div class="table-wrap">
+             <table>
+               <thead>
+                 <tr>
+                   <th>ID</th>
+                   <th>Student ID</th>
+                   <th>Name</th>
+                   <th>Course</th>
+                   <th>Department</th>
+                   <th>Test 1</th>
+                   <th>Test 2</th>
+                   <th>Total</th>
+                   <th>Attendance</th>
+                   <th>Actions</th>
+                 </tr>
+               </thead>
+               <tbody id="students-table"></tbody>
+             </table>
+           </div>
           <div class="pagination">
             <button class="btn ghost" id="prev-page">Prev</button>
             <span id="page-label">Page 1</span>
